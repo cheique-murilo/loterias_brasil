@@ -1,5 +1,4 @@
 
-
 import sys
 from os.path import join, dirname, abspath
 import pandas as pd
@@ -70,4 +69,3 @@ class FonteDados:
         normalized = loteria.strip().title()
         normalized = normalized.replace('Euromilhao', 'Euromilhões').replace('Euromilhoes', 'Euromilhões')
         return normalized 
-

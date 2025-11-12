@@ -1,4 +1,3 @@
-
 import streamlit as st
 import sys
 import os
@@ -33,7 +32,6 @@ loterias = carregar_dados_cache()
 st.sidebar.title("🔍 Filtros")
 data_inicio = st.sidebar.date_input("Data Inicial", value=date(2025, 1, 1))
 data_fim = st.sidebar.date_input("Data Final", value=date(2025, 12, 31))
-top_k = st.sidebar.slider("Top K Números", 5, 10, 5)
 sorteio_filtro = st.sidebar.selectbox("Filtrar por Sorteio", options=['Todos'] + [s.sorteio_id for lot in loterias.values() for s in lot.sorteios], index=0)
 
 # Função para filtrar
@@ -66,7 +64,7 @@ def quadro_sorteios(sorteios_filtrados, nome_loteria):
             'Números Sorteados': ', '.join(map(str, s.numeros_sorteados)),
             col_comp: ', '.join(map(str, s.numeros_complementares)) if "euromilhoes" in nome_loteria.lower() else (str(s.numeros_complementares[1]) if s.numeros_complementares else '-'),
             'Acumulou': 'Sim' if s.acumulou else 'Não',
-            'Prêmio/Jackpot (€)': f"{s.premio:,}" if s.premio else f"{s.jackpot:,}",
+            'Jackpot (€)': f"{s.premio:,}" if s.premio else f"{s.jackpot:,}",
             'Países': ', '.join(s.paises) if s.paises else '-',
             'Vencedores': s.vencedores
         }
@@ -169,15 +167,32 @@ if 'selected_loteria' in st.session_state:
     
     # Stats principais
     col1, col2 = st.columns(2)
+    
     with col1:
-        st.subheader("Números mais saíram/Números menos saíram")
+        st.subheader("Números mais/menos saíram")
+        # Top 5 fixo, sem slider
+        top_k = 5
         mais, menos = Estatistica.numeros_mais_menos_sairam(loteria, tipo='principais', top_k=top_k)
-        df_mais = pd.DataFrame(mais, columns=["Número", "Vezes"])
-        st.dataframe(df_mais, use_container_width=True, hide_index=True)
-        df_menos = pd.DataFrame(menos, columns=["Número", "Vezes"])
-        st.dataframe(df_menos, use_container_width=True, hide_index=True)
+    
+        # Tabs para filtro visual (como duplas/trios/quadras)
+        tab_mais, tab_menos = st.tabs(["🔼 Mais Saíram", "🔻 Menos Saíram"])
+        
+        with tab_mais:
+            if mais:
+                df_mais = pd.DataFrame(mais, columns=["Número", "Vezes"])
+                st.dataframe(df_mais, use_container_width=True, hide_index=True)
+            else:
+                st.info("Sem dados para mais saídos.")
+        
+        with tab_menos:
+            if menos:
+                df_menos = pd.DataFrame(menos, columns=["Número", "Vezes"])
+                st.dataframe(df_menos, use_container_width=True, hide_index=True)
+            else:
+                st.info("Sem dados para menos saídos.")
     
     with col2:
+        st.subheader("Conjunto de números que mais repetem")
         # Tabs para duplas, trios, quadras
         tab1, tab2, tab3 = st.tabs(["Duplas", "Trios", "Quadras"])
         with tab1:

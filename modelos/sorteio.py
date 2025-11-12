@@ -22,5 +22,3 @@ class Sorteio:
 
     def __str__(self):
         return f"{self.loteria} - {self.data.strftime('%d/%m/%Y')}: {self.numeros_sorteados} + {self.numeros_complementares}"
-
-
