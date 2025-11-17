@@ -79,7 +79,7 @@ def quadro_sorteios(sorteios_filtrados, nome_loteria):
             'Data': s.data.strftime('%d/%m/%Y'),
             'Sorteio': s.sorteio_id,
             'Números Sorteados': ', '.join(map(str, s.numeros_sorteados)),
-            col_comp: ', '.join(map(str, s.numeros_complementares)) if "euromilhoes" in nome_loteria.lower() else (str(s.numeros_complementares[2]) if s.numeros_complementares else '-'),
+            col_comp: ', '.join(map(str, s.numeros_complementares)) if "euromilhoes" in nome_loteria.lower() else (str(s.numeros_complementares[0]) if s.numeros_complementares else '-'),
             'Acumulou': 'Sim' if s.acumulou else 'Não',
             'Jackpot (€)': f"{s.premio:,}" if s.premio else f"{s.jackpot:,}",
             'Países': ', '.join(s.paises) if s.paises else '-',
