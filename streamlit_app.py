@@ -79,7 +79,7 @@ def quadro_sorteios(sorteios_filtrados, nome_loteria):
             'Data': s.data.strftime('%d/%m/%Y'),
             'Sorteio': s.sorteio_id,
             'Números Sorteados': ', '.join(map(str, s.numeros_sorteados)),
-            col_comp: ', '.join(map(str, s.numeros_complementares)) if "euromilhoes" in nome_loteria.lower() else (str(s.numeros_complementares[1]) if s.numeros_complementares else '-'),
+            col_comp: ', '.join(map(str, s.numeros_complementares)) if "euromilhoes" in nome_loteria.lower() else (str(s.numeros_complementares[2]) if s.numeros_complementares else '-'),
             'Acumulou': 'Sim' if s.acumulou else 'Não',
             'Jackpot (€)': f"{s.premio:,}" if s.premio else f"{s.jackpot:,}",
             'Países': ', '.join(s.paises) if s.paises else '-',
@@ -100,7 +100,7 @@ def ranking_paises_loteria(loteria):
     if contagem_paises:
         df_paises = pd.DataFrame(list(contagem_paises.items()), columns=['País', 'Contagem'])
         df_paises = df_paises.sort_values('Contagem', ascending=False)
-        base = alt.Chart(df_paises).mark_bar(color='steelblue').encode(
+        base = alt.Chart(df_paises).mark_bar(color='green').encode(
             x=alt.X('Contagem', scale=alt.Scale(domainMin=0),
                     axis=alt.Axis(title=None, labels=False, ticks=False)),  # Sem título, labels e ticks no X
             y=alt.Y('País', sort='-x',
