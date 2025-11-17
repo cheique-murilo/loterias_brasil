@@ -136,8 +136,8 @@ def calcular_streak_max_acum(loteria):
 # Logo ao lado do título
 col_logo, col_titulo = st.columns([1, 4])
 with col_logo:
-    if os.path.exists('imagens/jogossantacasa.png'):
-        st.image('imagens/jogossantacasa.png', width=150)
+    if os.path.exists('imagens/jogossantacasa.PNG'):
+        st.image('imagens/jogossantacasa.PNG', width=150)
 with col_titulo:
     st.title("Loterias de Portugal")
 
@@ -149,7 +149,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("<h3>🍀 Totoloto</h3>", unsafe_allow_html=True)
-    base64_totoloto = img_to_base64("imagens/totoloto.png")
+    base64_totoloto = img_to_base64("imagens/totoloto.PNG")
     if base64_totoloto:
         st.markdown(f"""
         <div style="height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px;">
@@ -167,7 +167,7 @@ with col1:
 
 with col2:
     st.markdown("<h3>🍀 Eurodreams</h3>", unsafe_allow_html=True)
-    base64_eurodreams = img_to_base64('imagens/eurodreams.png')
+    base64_eurodreams = img_to_base64('imagens/eurodreams.PNG')
     if base64_eurodreams:
         st.markdown(f"""
         <div style="height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px;">
@@ -185,7 +185,7 @@ with col2:
 
 with col3:
     st.markdown("<h3>🍀 Euromilhões</h3>", unsafe_allow_html=True)
-    base64_euromilhoes = img_to_base64('imagens/euromilhoes.png')
+    base64_euromilhoes = img_to_base64('imagens/euromilhoes.PNG')
     if base64_euromilhoes:
         st.markdown(f"""
         <div style="height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px;">
