@@ -1,71 +1,53 @@
-
-import sys
-from os.path import join, dirname, abspath
+# servicos/carregar_dados.py
 import pandas as pd
-from typing import Dict, Optional
-
-projeto_root = abspath(join(dirname(__file__), '..'))
-sys.path.insert(0, projeto_root)
-
-from modelos.sorteio import Sorteio
-from modelos.loteria import Loteria
 from modelos.totoloto import Totoloto
 from modelos.eurodreams import Eurodreams
 from modelos.euromilhoes import Euromilhoes
+from modelos.sorteio import Sorteio
 
+def carregar_dados():
+    df = pd.read_excel('dados_loterias.xlsx')
 
-class FonteDados:
-    def __init__(self, caminho_arquivo: str):
-        self.caminho = caminho_arquivo
-        self.loterias: Dict[str, Loteria] = {
-            'Totoloto': Totoloto(),
-            'Eurodreams': Eurodreams(),
-            'Euromilhões': Euromilhoes()
-        }
+    # Dicionário que aceita nomes em minúsculo
+    loterias = {
+        'totoloto': Totoloto(),
+        'eurodreams': Eurodreams(),
+        'euromilhoes': Euromilhoes(),
+        'euromilhões': Euromilhoes(),   # caso tenha acento
+    }
 
-    def carregar_dados(self) -> Dict[str, Loteria]:
-        df = pd.read_excel(self.caminho)
-        print(f"Excel carregado: {len(df)} linhas lidas.")
-        for _, row in df.iterrows():
-            try:
-                # Data: Timestamp → date string
-                data_raw = row['data']
-                data_str = data_raw.strftime('%d/%m/%Y') if hasattr(data_raw, 'strftime') else str(data_raw)
+    for _, row in df.iterrows():
+        try:
+            # Data
+            data_raw = row['data']
+            data_str = data_raw.strftime('%d/%m/%Y') if hasattr(data_raw, 'strftime') else str(data_raw)
 
-                # Complementares: Handle float/string
-                comp_raw = str(row['numeros_complementares']).strip()
-                if '.' in comp_raw:
-                    nums_comp = [int(float(p)) for p in comp_raw.split('.')]
-                else:
-                    nums_comp = [int(float(comp_raw))] if comp_raw and comp_raw != 'nan' else []
-                comp_str = ','.join(map(str, nums_comp)) if len(nums_comp) > 1 else str(nums_comp[0]) if nums_comp else ''
+            # Nome da loteria em minúsculo
+            nome = str(row['loteria']).strip().lower()
 
-                acumulou_str = str(row['acumulou']).lower()
-                paises_str = str(row.get('pais', '')).replace('nan', '')
+            if nome not in loterias:
+                continue
 
-                sorteio = Sorteio(
-                    data=data_str,
-                    sorteio_id=str(row['sorteio']),
-                    loteria=str(row['loteria']),
-                    numeros_sorteados=str(row['numeros_sorteados']),
-                    numeros_complementares=comp_str,
-                    acumulou=acumulou_str,
-                    premio=int(row['premio']) if pd.notna(row['premio']) else None,
-                    jackpot=int(row['jackpot']) if pd.notna(row['jackpot']) else None,
-                    paises=paises_str,
-                    vencedores=int(row['vencedores'])
-                )
+            sorteio = Sorteio(
+                data=data_str,
+                sorteio_id=str(row['sorteio']),
+                loteria=nome,   # guarda como veio (minúsculo)
+                numeros_sorteados=str(row['numeros_sorteados']),
+                numeros_complementares=str(row['numeros_complementares']),
+                acumulou=str(row['acumulou']).lower() == 'sim',
+                premio=int(row['premio']) if pd.notna(row['premio']) else 0,
+                jackpot=int(row['jackpot']) if pd.notna(row['jackpot']) else 0,
+                paises=str(row.get('pais', '')).replace('nan', ''),
+                vencedores=int(row['vencedores']) if pd.notna(row['vencedores']) else 0
+            )
 
-                nome_loteria = self._normalizar_loteria(sorteio.loteria)
-                if nome_loteria in self.loterias:
-                    self.loterias[nome_loteria].adicionar_sorteio(sorteio)
-            except Exception:
-                continue  # Ignora erros – lê o que pode
+            # Adiciona SEM VALIDAÇÃO (para você ver os dados já)
+            loterias[nome].adicionar_sorteio(sorteio)
 
-        print("Sorteios adicionados!")
-        return self.loterias
+        except Exception as e:
+            print(f"Linha ignorada: {e}")
+            continue
 
-    def _normalizar_loteria(self, loteria: str) -> str:
-        normalized = loteria.strip().title()
-        normalized = normalized.replace('Euromilhao', 'Euromilhões').replace('Euromilhoes', 'Euromilhões')
-        return normalized 
+    total = sum(len(l.sorteios) for l in loterias.values())
+    print(f"Carregamento concluído: {total} sorteios carregados")
+    return loterias

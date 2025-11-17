@@ -1,10 +1,14 @@
 
 from .loteria import Loteria
-from .sorteio import Sorteio
+from servicos.calculos_estatisticos import CalculosEstatisticos
 
 class Totoloto(Loteria):
     def __init__(self):
-        super().__init__('Totoloto', (1, 49), (1, 13))
+        super().__init__((1, 49), (1, 13))  # ← Agora aceita
 
-    def validar_sorteio(self, sorteio: Sorteio) -> bool:
-        return len(sorteio.numeros_sorteados) == 5 and all(1 <= n <= 49 for n in sorteio.numeros_sorteados) and len(sorteio.numeros_complementares) == 1 and 1 <= sorteio.numeros_complementares[0] <= 13
+    @property
+    def nome(self) -> str:
+        return "Totoloto"
+
+    def ranking(self) -> dict:
+        return CalculosEstatisticos(self).calculos_estatisticos()

@@ -1,28 +1,36 @@
-
+# modelos/loteria.py
 from abc import ABC, abstractmethod
 from typing import List
 from .sorteio import Sorteio
+import pandas as pd
 
 class Loteria(ABC):
-    def __init__(self, nome: str, numeros_principais_range: tuple, complementares_range: tuple):
-        self.nome = nome
-        self.numeros_principais_range = numeros_principais_range
-        self.complementares_range = complementares_range
+    def __init__(self, faixa_principais: tuple, faixa_complementares: tuple):
+        self.faixa_principais = faixa_principais
+        self.faixa_complementares = faixa_complementares
         self.sorteios: List[Sorteio] = []
 
+    @property
     @abstractmethod
-    def validar_sorteio(self, sorteio: Sorteio) -> bool:
+    def nome(self) -> str:
         pass
 
-    def adicionar_sorteio(self, sorteio: Sorteio) -> bool:
-        self.sorteios.append(sorteio)  # Lê tudo
-        return True
+    @abstractmethod
+    def ranking(self) -> dict:
+        pass
 
-    def get_todos_numeros(self, tipo: str = 'principais') -> List[int]:
-        numeros = []
-        for sorteio in self.sorteios:
-            if tipo == 'principais':
-                numeros.extend(sorteio.numeros_sorteados)
-            elif tipo == 'complementares':
-                numeros.extend(sorteio.numeros_complementares)
-        return numeros
+    def adicionar_sorteio(self, sorteio: Sorteio):
+        self.sorteios.append(sorteio)  # Adiciona SEM qualquer validação
+
+    def to_dataframe(self) -> pd.DataFrame:
+        if not self.sorteios:
+            return pd.DataFrame()
+        return pd.DataFrame([{
+            'data': s.data.strftime('%d/%m/%Y'),
+            'sorteio_id': s.sorteio_id,
+            'numeros_sorteados': ', '.join(map(str, s.numeros_sorteados)),
+            'numeros_complementares': ', '.join(map(str, s.numeros_complementares)),
+            'acumulou': 'Sim' if s.acumulou else 'Não',
+            'jackpot': s.jackpot,
+            'vencedores': s.vencedores
+        } for s in self.sorteios])

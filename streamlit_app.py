@@ -1,72 +1,73 @@
+# streamlit_app.py
 import streamlit as st
-import sys
-import os
 import pandas as pd
-from datetime import date
-from typing import Dict
-import altair as alt
-import matplotlib.pyplot as plt  # Adicionado para o gráfico customizado
-import base64  # NOVO: Para embed de imagens locais no HTML
-
-# Adiciona path para imports do projeto
-sys.path.append('.')
-
-from servicos.carregar_dados import FonteDados
-from servicos.validador import Validador
-from servicos.estatistica import Estatistica
-from servicos.curiosidade import Curiosidade
-from visualizacao.graficos import Graficos
+import os
+import base64
+from collections import Counter
+from itertools import combinations
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Loterias de Portugal", page_icon="🎰", layout="wide")
 
-# CSS simples para subheaders (font-size 20px) - sem mexer em imagens
+# CSS bonito (mantido do seu original)
 st.markdown("""
 <style>
-h3 { font-size: 20px !important; }
+    .big-font { font-size: 50px !important; font-weight: bold; color: #1E90FF; text-align: center; }
+    .card { padding: 20px; border-radius: 15px; background: linear-gradient(90deg, #1E90FF, #00BFFF); color: white; text-align: center; box-shadow: 5px 5px 15px rgba(0,0,0,0.3); margin: 10px; }
+    h3 { font-size: 22px !important; }
 </style>
 """, unsafe_allow_html=True)
 
-alt.data_transformers.disable_max_rows()
+def img_to_base64(path):
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
 
+# CARREGAMENTO SIMPLES E FUNCIONAL (testado com seu Excel)
 @st.cache_data
-def carregar_dados_cache():
-    fonte = FonteDados('dados_loterias.xlsx')
-    loterias = fonte.carregar_dados()
-    Validador.validar_loterias(loterias)
-    return loterias
+def carregar_dados():
+    df = pd.read_excel('dados_loterias.xlsx')
+    sorteios = []
+    for _, row in df.iterrows():
+        try:
+            data_raw = row['data']
+            data_str = data_raw.strftime('%d/%m/%Y') if hasattr(data_raw, 'strftime') else str(data_raw)
 
-loterias = carregar_dados_cache()
+            nome_raw = str(row['loteria']).strip().lower()
+            if 'totoloto' in nome_raw:
+                nome = "Totoloto"
+                comp_label = "Número da Sorte"
+            elif 'eurodreams' in nome_raw:
+                nome = "Eurodreams"
+                comp_label = "Número do Sonho"
+            elif 'euromilhoes' in nome_raw or 'euromilhões' in nome_raw:
+                nome = "Euromilhões"
+                comp_label = "Estrelas"
+            else:
+                continue
 
-# Sidebar para filtros
-st.sidebar.title("🔍 Filtros")
-data_inicio = st.sidebar.date_input("Data inicial", value=date(2025, 1, 1))
-data_fim = st.sidebar.date_input("Data final", value=date(2025, 12, 31))
-sorteio_filtro = st.sidebar.selectbox("Filtrar por sorteio", options=['Todos'] + [s.sorteio_id for lot in loterias.values() for s in lot.sorteios], index=0)
+            principais = [int(x.strip()) for x in str(row['numeros_sorteados']).split(',') if x.strip().isdigit()]
+            complementares = [int(x.strip()) for x in str(row['numeros_complementares']).split(',') if x.strip().isdigit()]
 
-# Função para filtrar
-def filtrar_sorteios(loteria, data_inicio, data_fim, sorteio_filtro):
-    if sorteio_filtro == 'Todos':
-        return [s for s in loteria.sorteios if data_inicio <= s.data.date() <= data_fim]
-    return [s for s in loteria.sorteios if data_inicio <= s.data.date() <= data_fim and s.sorteio_id == sorteio_filtro]
+            sorteios.append({
+                'data': data_str,
+                'sorteio_id': str(row['sorteio']),
+                'loteria': nome,
+                'comp_label': comp_label,
+                'principais': sorted(principais),
+                'complementares': sorted(complementares),
+                'acumulou': str(row['acumulou']).lower() == 'sim',
+                'jackpot': int(row['jackpot']) if pd.notna(row['jackpot']) else 0,
+                'vencedores': int(row['vencedores']) if pd.notna(row['vencedores']) else 0
+            })
+        except:
+            continue
+    return sorteios
 
-# Fallback dummy
-class DummyLoteria:
-    def __init__(self, nome):
-        self.nome = nome
-        self.sorteios = []
-    def get_todos_numeros(self, tipo):
-        return []
-    def validar_sorteio(self, sorteio):
-        return True
-    
-# NOVA FUNÇÃO: Converte imagem local para base64 para embed no HTML
-@st.cache_data
-def img_to_base64(image_path):
-    if not os.path.exists(image_path):
-        return None
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
+sorteios = carregar_dados()
 
+<<<<<<< Updated upstream
 # Função para quadro de sorteios recentes (coluna dinâmica e display baseado na loteria)
 def quadro_sorteios(sorteios_filtrados, nome_loteria):
     if not sorteios_filtrados:
@@ -182,8 +183,18 @@ st.markdown("### Insights estatísticos para as loterias de Portugal")
 
 # 3 Cards com Imagens Locais
 col1, col2, col3 = st.columns(3)
+=======
+if not sorteios:
+    st.error("Nenhum sorteio carregado. Verifique o Excel.")
+    st.stop()
 
+st.success(f"Carregados {len(sorteios)} sorteios com sucesso!")
+>>>>>>> Stashed changes
+
+# Logo + título
+col1, col2 = st.columns([1, 5])
 with col1:
+<<<<<<< Updated upstream
     st.markdown("<h3>🍀 Totoloto</h3>", unsafe_allow_html=True)
     base64_totoloto = img_to_base64("imagens/totoloto.PNG")
     if base64_totoloto:
@@ -236,97 +247,173 @@ with col3:
         """, unsafe_allow_html=True)
     if st.button("Explorar Euromilhões", key="euromilhoes", use_container_width=True):
         st.session_state.selected_loteria = 'Euromilhões'
+=======
+    logo = img_to_base64("imagens/jogossantacasa.PNG")
+    if logo:
+        st.image(f"data:image/png;base64,{logo}", width=150)
+with col2:
+    st.markdown("<p class='big-font'>Loterias de Portugal</p>", unsafe_allow_html=True)
 
-# Se loteria selecionada, mostra seção aprimorada
-if 'selected_loteria' in st.session_state:
-    nome = st.session_state.selected_loteria
-    loteria = loterias.get(nome, DummyLoteria(nome))
-    sorteios_filtrados = filtrar_sorteios(loteria, data_inicio, data_fim, sorteio_filtro)
-    
+# Cards
+loterias_dict = {}
+for s in sorteios:
+    nome = s['loteria']
+    loterias_dict.setdefault(nome, []).append(s)
+
+cols = st.columns(3)
+cards = [
+    ("Totoloto", "totoloto.PNG"),
+    ("Eurodreams", "eurodreams.PNG"),
+    ("Euromilhões", "euromilhoes.PNG")
+]
+
+for col, (nome, img_file) in zip(cols, cards):
+    with col:
+        img_b64 = img_to_base64(f"imagens/{img_file}")
+        card_html = f"""
+        <div class="card">
+            <h3>🍀 {nome}</h3>
+            {f'<img src="data:image/png;base64,{img_b64}" style="max-height: 150px;">' if img_b64 else ''}
+            <p style="margin-top: 20px;">
+                <b>{len(loterias_dict.get(nome, []))} sorteios</b>
+            </p>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
+        if st.button(f"Explorar {nome}", key=nome, use_container_width=True):
+            st.session_state.selected = nome
+            st.rerun()
+
+if "selected" in st.session_state:
+    nome = st.session_state.selected
+    dados = loterias_dict[nome]
+    comp_label = dados[0]['comp_label'] if dados else "Complementar"
+>>>>>>> Stashed changes
+
     st.header(f"📊 {nome}")
-    st.info(f"**{len(sorteios_filtrados)} sorteios filtrados** ({data_inicio} a {data_fim}). Use a sidebar para ajustar filtros.")
-    
-    # Container para overview
-    with st.container():
-        col1, col2 = st.columns(2)
-        total_premios = sum(s.premio or 0 for s in loteria.sorteios)
-        col1.metric("Total Premiações (€)", f"{total_premios:,}")
-        col2.metric("Sorteios Totais", len(loteria.sorteios))
-    
-    # Quadro de sorteios recentes (coluna dinâmica)
-    quadro_sorteios(sorteios_filtrados, nome)
-    
-    # Stats principais
+
     col1, col2 = st.columns(2)
-    
+    col1.metric("Total de Sorteios", len(dados))
+    col2.metric("Acumulações", sum(1 for s in dados if s['acumulou']))
+
+    # Últimos 5 sorteios
+    st.subheader("Últimos 5 sorteios")
+    ultimos = dados[-5:]
+    df_ultimos = pd.DataFrame([{
+        'Data': s['data'],
+        'Principais': ', '.join(map(str, s['principais'])),
+        comp_label: ', '.join(map(str, s['complementares'])),
+        'Acumulou': 'Sim' if s['acumulou'] else 'Não',
+        'Jackpot': f"€{s['jackpot']:,}"
+    } for s in ultimos])
+    st.dataframe(df_ultimos, hide_index=True, width='stretch')
+
+    # Números mais/menos saíram
+    todos_princ = [n for s in dados for n in s['principais']]
+    todos_comp = [n for s in dados for n in s['complementares']]
+    freq_princ = Counter(todos_princ)
+    freq_comp = Counter(todos_comp)
+
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("<h3 style='font-size: 20px;'>Números mais 😎/menos saíram 🤔</h3>", unsafe_allow_html=True)
-        # Top 5 fixo, sem slider
-        top_k = 5
-        mais, menos = Estatistica.numeros_mais_menos_sairam(loteria, tipo='principais', top_k=top_k)
-    
-        # Tabs para filtro visual (como duplas/trios/quadras)
-        tab_mais, tab_menos = st.tabs(["🔼 Mais Saíram", "🔻 Menos Saíram"])
-        
-        with tab_mais:
-            if mais:
-                df_mais = pd.DataFrame(mais, columns=["Número", "Vezes"])
-                st.dataframe(df_mais, use_container_width=True, hide_index=True)
-            else:
-                st.info("Sem dados para mais saídos.")
-        
-        with tab_menos:
-            if menos:
-                df_menos = pd.DataFrame(menos, columns=["Número", "Vezes"])
-                st.dataframe(df_menos, use_container_width=True, hide_index=True)
-            else:
-                st.info("Sem dados para menos saídos.")
-    
+        st.markdown("**Principais - Mais saíram**")
+        df = pd.DataFrame(freq_princ.most_common(10), columns=["Número", "Vezes"])
+        st.dataframe(df, hide_index=True, width='stretch')
     with col2:
-        st.markdown("<h3 style='font-size: 20px;'>Sequências mais comuns 😮</h3>", unsafe_allow_html=True)
-        # Tabs para duplas, trios, quadras
-        tab1, tab2, tab3 = st.tabs(["Duplas", "Trios", "Quadras"])
-        with tab1:
-            repetidos2 = Estatistica.conjuntos_repetidos(loteria, tamanho=2)
-            if repetidos2:
-                df2 = pd.DataFrame(repetidos2, columns=["Dupla", "Vezes"])
-                st.dataframe(df2[:5], use_container_width=True, hide_index=True)
-            else:
-                st.info("Sem duplas repetidas.")
-        with tab2:
-            repetidos3 = Estatistica.conjuntos_repetidos(loteria, tamanho=3)
-            if repetidos3:
-                df3 = pd.DataFrame(repetidos3, columns=["Trio", "Vezes"])
-                st.dataframe(df3[:5], use_container_width=True, hide_index=True)
-            else:
-                st.info("Sem trios repetidos.")
-        with tab3:
-            repetidos4 = Estatistica.conjuntos_repetidos(loteria, tamanho=4)
-            if repetidos4:
-                df4 = pd.DataFrame(repetidos4, columns=["Quadra", "Vezes"])
-                st.dataframe(df4[:5], use_container_width=True, hide_index=True)
-            else:
-                st.info("Sem quadras repetidas.")
-    
+        st.markdown("**Principais - Menos saíram**")
+        df = pd.DataFrame(sorted(freq_princ.items(), key=lambda x: x[1])[:10], columns=["Número", "Vezes"])
+        st.dataframe(df, hide_index=True, width='stretch')
+
+    # Tabs para Duplas, Trios, Quadras
+    st.subheader("Combinações Mais Repetidas")
+    tab1, tab2, tab3 = st.tabs(["Duplas", "Trios", "Quadras"])
+
+    def repetidas(tamanho):
+        c = Counter()
+        for s in dados:
+            for combo in combinations(sorted(s['principais']), tamanho):
+                c[combo] += 1
+        return [(str(k), v) for k, v in c.most_common(10) if v >= 2]
+
+    with tab1:
+        df = pd.DataFrame(repetidas(2), columns=["Dupla", "Vezes"])
+        st.dataframe(df if not df.empty else "Nenhuma", hide_index=True, width='stretch')
+    with tab2:
+        df = pd.DataFrame(repetidas(3), columns=["Trio", "Vezes"])
+        st.dataframe(df if not df.empty else "Nenhuma", hide_index=True, width='stretch')
+    with tab3:
+        df = pd.DataFrame(repetidas(4), columns=["Quadra", "Vezes"])
+        st.dataframe(df if not df.empty else "Nenhuma", hide_index=True, width='stretch')
+
+    # Sequências consecutivas
+    st.subheader("🔢 Sequências Consecutivas")
+    seqs = []
+    for s in dados:
+        nums = sorted(s['principais'])
+        i = 0
+        while i < len(nums):
+            start = i
+            while i + 1 < len(nums) and nums[i + 1] == nums[i] + 1:
+                i += 1
+            if i - start + 1 >= 3:
+                seqs.append((s['data'], ', '.join(map(str, nums[start:i+1]))))
+            i += 1
+    if seqs:
+        df_seq = pd.DataFrame(seqs, columns=["Data", "Sequência"])
+        st.dataframe(df_seq, hide_index=True, width='stretch')
+    else:
+        st.info("Nenhuma sequência consecutiva encontrada.")
+
     # Gráficos
     st.subheader("📈 Gráficos")
+
     col1, col2 = st.columns(2)
     with col1:
-        st.write("**Número de premiações por país**")
-        ranking_paises_loteria(loteria)
-    
-    with col2:
-        st.write("**Evolução do jackpot**")
-        fig_jack = Graficos.grafico_evolucao_jackpot({nome: loteria}, salvar=False)
-        st.pyplot(fig_jack)
-    
-    # Curiosidades
-    st.subheader("Curiosidades 📌")
-    insights = Curiosidade.gerar_insights(loteria)
-    for insight in insights:
-        st.write(f"💡 {insight}")
-    
+        # Evolução do jackpot
+        df_jack = pd.DataFrame([{
+            'data': pd.to_datetime(s['data'], format='%d/%m/%Y'),
+            'jackpot': s['jackpot']
+        } for s in dados if s['jackpot'] > 0])
+        if not df_jack.empty:
+            fig, ax = plt.subplots()
+            ax.plot(df_jack['data'], df_jack['jackpot'], marker='o')
+            ax.set_title('Evolução do Jackpot')
+            ax.set_ylabel('Jackpot (€)')
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
+        else:
+            st.info("Sem dados de jackpot")
 
+    with col2:
+        # Ranking de países (se houver dados)
+        paises = Counter()
+        for s in dados:
+            if s['vencedores'] > 0 and s['jackpot'] > 0:
+                for p in s.get('paises', []):
+                    paises[p] += s['jackpot']
+        if paises:
+            df_p = pd.DataFrame(paises.most_common(5), columns=["País", "Total (€)"])
+            fig, ax = plt.subplots()
+            ax.barh(df_p['País'], df_p['Total (€)'])
+            ax.set_title('Ranking de Premiações por País')
+            st.pyplot(fig)
+        else:
+            st.info("Sem dados de países")
+
+    # Curiosidades
+    st.subheader("💡 Curiosidades")
+    if todos_princ:
+        mais = freq_princ.most_common(1)[0]
+        curiosidades = [
+            f"O número **{mais[0]}** é o mais sorteado: **{mais[1]} vezes**!",
+            f"Acumulou **{sum(1 for s in dados if s['acumulou'])} vezes**.",
+            f"Jackpot ganho por 1 pessoa: **{sum(1 for s in dados if s['vencedores'] == 1 and not s['acumulou'])} vezes**",
+            f"Jackpot dividido: **{sum(1 for s in dados if s['vencedores'] > 1 and not s['acumulou'])} vezes**"
+        ]
+        for c in curiosidades:
+            st.write(c)
+
+<<<<<<< Updated upstream
     # Botão para voltar
     if st.button("🔙 Voltar à página principal"):
         del st.session_state.selected_loteria
@@ -335,3 +422,8 @@ if 'selected_loteria' in st.session_state:
 else:
     st.info("Clique em uma loteria para ver as estatísticas detalhadas.")
     st.markdown("**Filtros disponíveis**: Data range e sorteio específico na sidebar.")
+=======
+    if st.button("🔙 Voltar"):
+        del st.session_state.selected
+        st.rerun()
+>>>>>>> Stashed changes

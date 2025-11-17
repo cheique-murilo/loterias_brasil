@@ -3,3 +3,5 @@ openpyxl
 matplotlib
 seaborn
 streamlit
+altair
+numpy

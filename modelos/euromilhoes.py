@@ -1,10 +1,16 @@
 
 from .loteria import Loteria
-from .sorteio import Sorteio
+from servicos.calculos_estatisticos import CalculosEstatisticos
 
-class Euromilhoes(Loteria):  # Exemplo – mesmo para os outros
+class Euromilhoes(Loteria):
     def __init__(self):
-        super().__init__('Euromilhoes', (1, 50), (1, 12))
+        super().__init__((1, 50), (1, 12))  # ← Agora aceita
 
-    def validar_sorteio(self, sorteio: Sorteio) -> bool:
-        return True  # Lê tudo
+    @property
+    def nome(self) -> str:
+        return "Euromilhões"
+
+    def ranking(self) -> dict:
+        return CalculosEstatisticos(self).calculos_estatisticos()
+
+
