@@ -1,19 +1,53 @@
-# Análise de Loterias Portuguesas
+# 🍀 Análise de Loterias de Portugal
 
-Projeto em Python para gerar informações estatísticas sobre as loterias de Portugal (Totoloto, Eurodreams, Euromilhões).
+Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise estatística, visualização de tendências e histórico de sorteios das principais loterias de Portugal: **Euromilhões**, **Totoloto** e **Eurodreams**.
 
-## Como Rodar
-1. Instale dependências: "pip install -r requirements.txt"
-2. Coloque as informações dos sorteios ("dados_loterias.xlsx") na raiz do sistema.
-3. Rode "python streamlit_app.py" para gerar curiosidades estatísticas sobre cada loteria.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://seu-link-do-deploy-aqui.streamlit.app)
 
-## Web App
-Rode "streamlit run streamlit_app.py"  para versão interativa com filtros (via web).
+## 📊 Funcionalidades
 
-## Estrutura
-- modelos/: classes para Sorteio e Loterias.
-- servicos/: carregamento dos dados, validações e cálculos estatísticos.
-- visualizacao/: métodos para gerar tabelas e gráficos
-- streamlit_app.py: execução principal.
+- **Dashboard Interativo:** Visão geral com KPIs de sorteios, acumulações e jackpots.
+- **Análise Estatística:**
+  - Frequência de números (mais e menos sorteados).
+  - Identificação de combinações repetidas (Duplas, Trios).
+  - Detecção de sequências consecutivas.
+- **Visualização de Dados:**
+  - Gráficos de evolução do Jackpot.
+  - Ranking de países vencedores.
+  - Representação visual das bolas sorteadas.
+- **Filtros Inteligentes:** Filtragem dinâmica por intervalo de datas.
+- **Cache de Dados:** Carregamento otimizado usando `st.cache_data` para alta performance.
 
-Dependências: pandas, openpyxl, matplotlib, seaborn (verificar requirements)
+## 🛠️ Tecnologias Utilizadas
+
+- **Frontend:** [Streamlit](https://streamlit.io/)
+- **Manipulação de Dados:** [Pandas](https://pandas.pydata.org/)
+- **Visualização:** [Matplotlib](https://matplotlib.org/)
+- **Excel Engine:** OpenPyXL
+
+## 📂 Estrutura do Projeto
+
+O projeto foi refatorado seguindo o padrão MVC (Model-View-Controller) adaptado para scripts de dados:
+
+```text
+├── 📂 modelos/             # Definição das Classes (OOP)
+│   ├── loteria_base.py     # Classe Abstrata com regras de validação
+│   ├── sorteio.py          # Dataclass imutável do Sorteio
+│   ├── euromilhoes.py      # Regras específicas (5+2)
+│   ├── totoloto.py         # Regras específicas (5+1)
+│   └── eurodreams.py       # Regras específicas (6+1)
+│
+├── 📂 servicos/            # Lógica de Negócio e I/O
+│   ├── carregar_dados.py   # Leitura robusta de Excel/CSV
+│   ├── validador.py        # Limpeza e Factory de objetos
+│   ├── calculos_estatisticos.py # Matemática e Agregações
+│   └── filtros.py          # Utilitários de filtro
+│
+├── 📂 visualizacao/        # Preparação de Dados para UI
+│   ├── visual_graficos.py  # Dados para Matplotlib
+│   └── visual_tabelas.py   # Dados para tabelas HTML
+│
+├── 📂 imagens/             # Assets (Logos)
+├── dados_loterias.xlsx     # Base de dados (Excel)
+├── streamlit_app.py        # Aplicação Principal (Entry Point)
+└── requirements.txt        # Dependências
