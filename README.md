@@ -2,7 +2,8 @@
 
 Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise estatística, visualização de tendências e histórico de sorteios das principais loterias de Portugal: **Euromilhões**, **Totoloto** e **Eurodreams**.
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://projeto-loterias.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-Online-brightgreen)
 
 ## 📊 Funcionalidades
 
@@ -30,32 +31,65 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
 - **Excel engine:** OpenPyXL
 
 ## 📂 Estrutura do projeto
-
-O projeto foi refatorado seguindo o padrão MVC (Model-View-Controller) adaptado para scripts de dados:
+<!-- TREE_START -->
 
 ```text
-├── 📂 modelos/             # Definição das classes (OOP)
-│   ├── loteria_base.py     # Classe abstrata com regras de validação
-│   ├── sorteio.py          # Dataclass imutável do Sorteio
-│   ├── euromilhoes.py      # Regras específicas (5+2)
-│   ├── totoloto.py         # Regras específicas (5+1)
-│   └── eurodreams.py       # Regras específicas (6+1)
-│
-├── 📂 servicos/                  # Lógica de Negócio e I/O
-│   ├── carregar_dados.py         # Leitura robusta de Excel/CSV
-│   ├── validador.py              # Limpeza e Factory de objetos
-│   ├── calculos_estatisticos.py  # Matemática e agregações
-│   └── filtros.py                # Utilitários de filtro
-│
-├── 📂 visualizacao/        # Preparação de dados para UI
-│   ├── visual_graficos.py  # Dados para Matplotlib
-│   └── visual_tabelas.py   # Dados para tabelas HTML
-│
-├── 📂 imagens/             # Assets (Logos)
-├── dados_loterias.xlsx     # Base de dados (Excel)
-├── streamlit_app.py        # Aplicação principal (Entry Point)
-└── requirements.txt        # Dependências
 
-## **A melhorar para novas versões: aprimorar filtros e layout "mais bonito"**
+📁 projeto_loterias
+├── 📄 .gitignore
+├── 📄 index.html
+├── 📄 jogos_portugal.xlsx
+├── 📄 lembrar.txt
+├── 📄 README.md
+├── 📄 requirements.txt
+│
+├── 📁 .streamlit
+│   └── 📄 config.toml
+│
+├── 📁 app
+│   ├── 📄 streamlit_app.py
+│   └── 📄 __init__.py
+│
+├── 📁 estatisticas
+│   ├── 📄 agregador.py
+│   ├── 📄 atraso.py
+│   ├── 📄 especiais.py
+│   ├── 📄 frequencias.py
+│   ├── 📄 jackpots.py
+│   ├── 📄 paises.py
+│   ├── 📄 repeticoes.py
+│   ├── 📄 sequencias.py
+│   └── 📄 __init__.py
+│
+├── 📁 logos
+│   ├── 🖼️ eurodreams.PNG
+│   ├── 🖼️ euromilhoes.PNG
+│   ├── 🖼️ jogossantacasa.PNG
+│   └── 🖼️ totoloto.PNG
+│
+├── 📁 modelos
+│   ├── 📄 eurodreams.py
+│   ├── 📄 euromilhoes.py
+│   ├── 📄 loteria_base.py
+│   ├── 📄 sorteio.py
+│   ├── 📄 totoloto.py
+│   └── 📄 __init__.py
+│
+├── 📁 servicos
+│   ├── 📄 carregar.py
+│   ├── 📄 construir.py
+│   ├── 📄 normalizar.py
+│   └── 📄 __init__.py
+│
+└── 📁 visualizacao
+    ├── 📄 graficos.py
+    ├── 📄 tabelas.py
+    └── 📄 __init__.py
 
+
+<!-- TREE_END -->
+
+## **Sempre a atualizar"**
+
+Observações sobre os jogos e sobre o histórico de alterações ao longo do tempo
 

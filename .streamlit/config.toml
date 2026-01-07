@@ -1,2 +1,6 @@
 [theme]
-primaryColor = "#228B22"  # Verde pra tema loterias
+primaryColor="#007A53"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F2F2F2"
+textColor="#000000"
+font="sans serif"

@@ -1,0 +1,12 @@
+# rodar o app
+streamlit run app/streamlit_app.py
+
+# Limpar o cache (no PowerShell, dentro da pasta do projeto):
+Get-ChildItem -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
+
+# arvore do projeto
+tree /F
+
+# arvore do projeto em .txt
+tree /F > estrurura.txt ("estrutura" é o nome dado ao arquivo)
+
