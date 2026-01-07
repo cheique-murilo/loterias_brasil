@@ -53,9 +53,9 @@ alt.themes.enable("tema_verde")
 
 def mostrar_logo_loteria(nome_loteria: str):
     logos = {
-        "Totoloto": os.path.join(ROOT, "logos", "totoloto.png"),
-        "Euromilhões": os.path.join(ROOT, "logos", "euromilhoes.png"),
-        "Eurodreams": os.path.join(ROOT, "logos", "eurodreams.png"),
+        "Totoloto": os.path.join(ROOT, "logos", "totoloto.PNG"),
+        "Euromilhões": os.path.join(ROOT, "logos", "euromilhoes.PNG"),
+        "Eurodreams": os.path.join(ROOT, "logos", "eurodreams.PNG"),
     }
     caminho = logos.get(nome_loteria)
     if caminho and os.path.exists(caminho):
@@ -72,7 +72,7 @@ def titulo_principal():
         )
 
     with col2:
-        logo_path = os.path.join(ROOT, "logos", "jogossantacasa.png")
+        logo_path = os.path.join(ROOT, "logos", "jogossantacasa.PNG")
         if os.path.exists(logo_path):
             st.image(logo_path, width=150)
 
