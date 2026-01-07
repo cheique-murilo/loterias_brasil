@@ -1,12 +1,11 @@
 # 🍀 Análise das loterias de Portugal
 
-Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise estatística, visualização de tendências e histórico de sorteios das principais loterias de Portugal: **Euromilhões**, **Totoloto** e **Eurodreams**.
+Um dashboard interativo desenvolvido em **python** e **streamlit** para análise estatística, visualização de tendências e histórico de sorteios das principais loterias de Portugal: **Euromilhões**, **Totoloto** e **Eurodreams**.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Online-brightgreen)
 
 ## 📊 Funcionalidades
-
 - **Dashboard interativo:** Visão geral com KPIs de sorteios, curiosidades, acumulações e jackpots.
 
 - **Análise Estatística:**
@@ -15,13 +14,11 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
   - Detecção de sequências consecutivas.
 
 - **Visualização de dados:**
-  - Gráficos de evolução do Jackpot.
+  - Gráficos de evolução do jackpot.
   - Ranking de países vencedores.
   - Representação visual das bolas sorteadas.
 
 - **Filtros inteligentes:** Filtragem dinâmica por intervalo de datas e/ou sorteios.
-
-- **Cache de dados:** Carregamento otimizado usando `st.cache_data` para alta performance.
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -84,9 +81,12 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
     ├── 📄 graficos.py
     ├── 📄 tabelas.py
     └── 📄 __init__.py
-    ``` text
+```
 
 <!-- TREE_END -->
+
+# Observações sobre as loterias 🔍
+### (Mudanças so longo do tempo)
 
 ## 📊 Tabela Comparativa das Loterias de Portugal
 
