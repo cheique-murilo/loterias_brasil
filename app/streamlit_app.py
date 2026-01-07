@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime as dt
 import pandas as pd
 import streamlit as st
 import altair as alt
@@ -74,6 +74,28 @@ def titulo_principal():
         if os.path.exists(logo_path):
             st.image(logo_path, width=150)
 
+
+def mostrar_data_atualizacao():
+    CAMINHO_ARQUIVO = os.path.join(ROOT, "jogos_portugal.xlsx")
+
+    if os.path.exists(CAMINHO_ARQUIVO):
+        timestamp = os.path.getmtime(CAMINHO_ARQUIVO)
+        data_mod = dt.fromtimestamp(timestamp).strftime("%d/%m/%Y %H:%M")
+
+        st.markdown(
+            f"""
+            <p style='font-size:14px; color:gray; margin-top:-10px;'>
+                📅 <b>Dados atualizados em:</b> {data_mod}
+            </p>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            "<p style='font-size:14px; color:red;'>⚠️ Arquivo de dados não encontrado.</p>",
+            unsafe_allow_html=True
+        )
+
 # ------------------------------------------------------------
 # Configuração de página
 # ------------------------------------------------------------
@@ -85,6 +107,9 @@ st.set_page_config(
 )
 
 titulo_principal()
+mostrar_data_atualizacao()
+
+st.markdown("---")
 
 # ------------------------------------------------------------
 # Filtros laterais
@@ -117,8 +142,8 @@ if tipo_filtro == "Data":
         st.sidebar.error("Data inicial não pode ser maior que a final.")
         st.stop()
 
-    inicio_dt = datetime.combine(d_inicio, datetime.min.time())
-    fim_dt = datetime.combine(d_fim, datetime.max.time())
+    inicio_dt = dt.combine(d_inicio, dt.min.time())
+    fim_dt = dt.combine(d_fim, dt.max.time())
 
     sorteios_filtrados = [s for s in loto_original.sorteios if inicio_dt <= s.data <= fim_dt]
 

@@ -1,13 +1,13 @@
 import pandas as pd
 import re
 
-def _extrair_numeros(txt) -> list[int]:
+def _extrair_numeros(txt):
     if pd.isna(txt):
         return []
     return [int(n) for n in re.findall(r"\d+", str(txt))]
 
 
-def _normalizar_pais(valor) -> str:
+def _normalizar_pais(valor):
     if pd.isna(valor):
         return ""
     txt = str(valor).strip()
@@ -17,41 +17,21 @@ def _normalizar_pais(valor) -> str:
     return ", ".join(partes)
 
 
-def _formatar_jackpot(valor) -> str:
-    """
-    Converte valores crus como '1000000' em '€1.000.000,00'.
-    """
-    txt = str(valor).strip()
-    txt = re.sub(r"[^\d]", "", txt)
-
+def _formatar_jackpot(valor):
+    txt = re.sub(r"[^\d]", "", str(valor))
     if not txt:
         return "€0,00"
-
     numero = int(txt)
-
     return f"€{numero:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-# 🔥 CORREÇÃO CRÍTICA: jackpot para inteiro sem multiplicações indevidas
-def _jackpot_para_int(valor) -> int:
-    if pd.isna(valor):
-        return 0
-
-    txt = str(valor).strip()
-
-    # remove espaços
-    txt = txt.replace(" ", "")
-
-    # remove separadores de milhar e decimais
-    txt = txt.replace(".", "").replace(",", "")
-
-    # remove qualquer coisa que não seja número
-    txt = re.sub(r"[^\d]", "", txt)
-
+# 🔥 versão simples e segura
+def _jackpot_para_int(valor):
+    txt = re.sub(r"[^\d]", "", str(valor))
     return int(txt) if txt else 0
 
 
-def normalizar_df(df: pd.DataFrame) -> pd.DataFrame:
+def normalizar_df(df):
     df = df.copy()
 
     df["loteria_norm"] = (
@@ -81,38 +61,26 @@ def normalizar_df(df: pd.DataFrame) -> pd.DataFrame:
 
     df["complementares"] = df.apply(parse_complementares, axis=1)
 
-    # jackpot formatado
     df["jackpot_fmt"] = df["jackpot"].apply(_formatar_jackpot)
-
-    # jackpot inteiro (corrigido)
     df["jackpot_int"] = df["jackpot"].apply(_jackpot_para_int)
 
-    if "acumulou" in df.columns:
-        df["acumulou_bool"] = (
-            df["acumulou"]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            .isin(["true", "1", "sim", "s", "yes", "y"])
-        )
-    else:
-        df["acumulou_bool"] = False
+    df["acumulou_bool"] = (
+        df["acumulou"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .isin(["true", "1", "sim", "s", "yes", "y"])
+    )
 
-    if "pais_vencedor" in df.columns:
-        df["pais"] = df["pais_vencedor"].apply(_normalizar_pais)
-    else:
-        df["pais"] = ""
+    df["pais"] = df["pais_vencedor"].apply(_normalizar_pais)
 
-    if "num_vencedores_jackpot" in df.columns:
-        df["num_vencedores_jackpot"] = (
-            df["num_vencedores_jackpot"]
-            .astype(str)
-            .str.replace(r"[^\d]", "", regex=True)
-            .replace("", "0")
-            .astype(int)
-        )
-    else:
-        df["num_vencedores_jackpot"] = 0
+    df["num_vencedores_jackpot"] = (
+        df["num_vencedores_jackpot"]
+        .astype(str)
+        .str.replace(r"[^\d]", "", regex=True)
+        .replace("", "0")
+        .astype(int)
+    )
 
     return df
 
