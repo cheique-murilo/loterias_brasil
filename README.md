@@ -84,6 +84,7 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
     ├── 📄 graficos.py
     ├── 📄 tabelas.py
     └── 📄 __init__.py
+    ``` text
 
 <!-- TREE_END -->
 
