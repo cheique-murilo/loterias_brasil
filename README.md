@@ -33,7 +33,6 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
 ## 📂 Estrutura do projeto
 <!-- TREE_START -->
 
-
 📁 projeto_loterias
 ├── 📄 .gitignore
 ├── 📄 index.html
@@ -84,7 +83,6 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
     ├── 📄 graficos.py
     ├── 📄 tabelas.py
     └── 📄 __init__.py
-    ```
 
 <!-- TREE_END -->
 
