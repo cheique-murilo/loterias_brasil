@@ -33,7 +33,7 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
 ## 📂 Estrutura do projeto
 <!-- TREE_START -->
 
-```mermaid
+```text
 📁 projeto_loterias
 ├── 📄 .gitignore
 ├── 📄 index.html
