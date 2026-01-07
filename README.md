@@ -86,10 +86,16 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
     ├── 📄 tabelas.py
     └── 📄 __init__.py
 
-
 <!-- TREE_END -->
 
-## **Sempre a atualizar"**
+## 📊 Tabela Comparativa das Loterias de Portugal
 
-Observações sobre os jogos e sobre o histórico de alterações ao longo do tempo
+| Loteria        | Ano de criação | Países participantes | Formato inicial              | Principais alterações                                                                 | Formato atual                                |
+|----------------|----------------|----------------------|------------------------------|----------------------------------------------------------------------------------------|-----------------------------------------------|
+| **Totoloto**   | 1985           | Portugal             | 6/49 + Suplementar           | 2011: reformulação total (5+1), novas categorias, 2 sorteios/semana                    | 5 números (1–49) + Número da Sorte (1–13)     |
+| **EuroDreams** | 2023           | 9 países europeus    | 6/40 + Número de Sonho       | Nenhuma alteração até o momento                                                        | 6 números (1–40) + Número de Sonho (1–5)      |
+| **Euromilhões**| 2004           | 9 países europeus    | 5/50 + 2 estrelas (1–9)      | 2011: 2 sorteios/semana; 2016: estrelas 1–12; jackpots maiores                         | 5 números (1–50) + 2 estrelas (1–12)          |
+
+
+## **Sempre a atualizar"**
 
