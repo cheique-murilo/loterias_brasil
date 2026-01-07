@@ -10,6 +10,8 @@ import altair as alt
 # ------------------------------------------------------------
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CAMINHO_ARQUIVO = os.path.join(ROOT, "jogos_portugal.xlsx")
+
 if ROOT not in sys.path:
     sys.path.append(ROOT)
 
@@ -76,7 +78,6 @@ def titulo_principal():
 
 
 def mostrar_data_atualizacao():
-    CAMINHO_ARQUIVO = os.path.join(ROOT, "jogos_portugal.xlsx")
 
     if os.path.exists(CAMINHO_ARQUIVO):
         timestamp = os.path.getmtime(CAMINHO_ARQUIVO)
@@ -117,10 +118,8 @@ st.markdown("---")
 
 loterias = carregar_e_processar_loterias()
 nomes_disponiveis = [nome for nome, lot in loterias.items() if lot.total_sorteios > 0]
-
 nome_lot = st.sidebar.selectbox("Escolha a loteria", nomes_disponiveis)
 loto_original = loterias[nome_lot]
-
 mostrar_logo_loteria(nome_lot)
 
 # ------------------------------------------------------------
