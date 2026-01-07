@@ -33,7 +33,6 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
 ## 📂 Estrutura do projeto
 <!-- TREE_START -->
 
-```text
 
 📁 projeto_loterias
 ├── 📄 .gitignore
@@ -85,6 +84,7 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
     ├── 📄 graficos.py
     ├── 📄 tabelas.py
     └── 📄 __init__.py
+    ```
 
 <!-- TREE_END -->
 
@@ -97,5 +97,5 @@ Um dashboard interativo desenvolvido em **Python** e **Streamlit** para análise
 | **Euromilhões**| 2004           | 9 países europeus    | 5/50 + 2 estrelas (1–9)      | 2011: 2 sorteios/semana; 2016: estrelas 1–12; jackpots maiores                         | 5 números (1–50) + 2 estrelas (1–12)          |
 
 
-## **Sempre a atualizar"**
+## Sempre a atualizar
 
