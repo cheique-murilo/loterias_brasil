@@ -1,59 +1,63 @@
 from modelos.sorteio import Sorteio
+import re
+from typing import Iterable, Tuple
 
-# ------------------------------------------------------------
-# Maior jackpot (valor, concurso, data)
-# ------------------------------------------------------------
 
-def maior_jackpot(sorteios):
+def _jackpot_to_float(valor: str) -> float:
+    if not valor:
+        return 0.0
+
+    v = re.sub(r"[R$\s\.]", "", valor)
+    v = v.replace(",", ".")
+
+    try:
+        return float(v)
+    except:
+        return 0.0
+
+
+def maior_jackpot(sorteios: Iterable[Sorteio]) -> Tuple[str, str, object]:
     """
-    Retorna uma tupla:
-        (valor_do_jackpot, concurso, data)
-    Se não houver sorteios, retorna (0, None, None)
+    Retorna (valor_fmt, concurso, data).
     """
+    sorteios = list(sorteios)
     if not sorteios:
-        return (0, None, None)
+        return ("R$ 0,00", None, None)
 
-    s = max(sorteios, key=lambda x: x.jackpot)
-    return (s.jackpot, s.concurso, s.data)
+    s = max(sorteios, key=lambda x: _jackpot_to_float(x.jackpot_fmt))
+    return (s.jackpot_fmt, s.concurso, s.data)
 
-# ------------------------------------------------------------
-# Total de acumulações
-# ------------------------------------------------------------
 
-def total_acumulacoes(sorteios):
-    """
-    Conta quantas vezes o jackpot acumulou.
-    """
+def total_acumulacoes(sorteios: Iterable[Sorteio]) -> int:
     return sum(1 for s in sorteios if s.acumulou)
 
-# ------------------------------------------------------------
-# Streak de acumulações
-# ------------------------------------------------------------
 
-def streak_acumulacoes(sorteios):
+def streak_acumulacoes(sorteios: Iterable[Sorteio]) -> int:
     """
-    Retorna o maior número de acumulações consecutivas.
+    Maior sequência consecutiva de sorteios acumulados.
+    Ordena internamente por (data, concurso) para garantir consistência.
     """
+    sorteios = sorted(sorteios, key=lambda s: (s.data, s.concurso_base, s.sorteio_num))
+
     max_streak = 0
     atual = 0
 
     for s in sorteios:
         if s.acumulou:
             atual += 1
-            max_streak = max(max_streak, atual)
+            if atual > max_streak:
+                max_streak = atual
         else:
             atual = 0
 
     return max_streak
 
-# ------------------------------------------------------------
-# Total de jackpots pagos
-# ------------------------------------------------------------
 
-def total_jackpots_pagos(sorteios):
+def total_jackpots_pagos(sorteios: Iterable[Sorteio]) -> int:
     """
-    Jackpot pago = NÃO acumulou.
-    (Não depende do valor do jackpot.)
+    Total de sorteios em que houve ganhadores (não acumulou).
     """
     return sum(1 for s in sorteios if not s.acumulou)
+
+
 

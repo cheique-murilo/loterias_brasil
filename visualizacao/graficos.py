@@ -1,14 +1,19 @@
-from typing import Dict, Iterable
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from typing import Dict, Iterable
 
 from modelos.sorteio import Sorteio
+from estatisticas.jackpots import _jackpot_to_float
 
-VERDE = "#2ECC71"
+AZUL = "#0A4ECF"
+AZUL_ESCURO = "#063A9B"
+AZUL_CLARO = "#4C7DFF"
 
 
+# ------------------------------------------------------------
+# FREQUÊNCIA DOS NÚMEROS
+# ------------------------------------------------------------
 def grafico_frequencias(freq_dict: Dict[int, int]) -> go.Figure:
     df = (
         pd.DataFrame(
@@ -24,96 +29,112 @@ def grafico_frequencias(freq_dict: Dict[int, int]) -> go.Figure:
         y="Frequência",
         text="Frequência",
         title="Frequência dos Números",
-        color_discrete_sequence=[VERDE],
+        color_discrete_sequence=[AZUL],
     )
 
     fig.update_traces(textposition="outside")
 
-    return fig
-
-
-def grafico_paises(premios: Dict[str, int]) -> go.Figure:
-    df_paises = (
-        pd.DataFrame(list(premios.items()), columns=["País", "Qtd"])
-        .sort_values("Qtd", ascending=True)
-    )
-
-    fig = px.bar(
-        df_paises,
-        x="Qtd",
-        y="País",
-        orientation="h",
-        text="Qtd",
-        title="Qtde de prémios por país",
-        color_discrete_sequence=[VERDE],
-    )
-
-    fig.update_traces(textposition="outside")
-
-    # ✔ MOSTRA APENAS LABELS (Países + valores)
     fig.update_layout(
-        xaxis=dict(
-            showticklabels=False,   # remove números do eixo X
-            title=None              # remove título do eixo X
-        ),
-        yaxis=dict(
-            showticklabels=True,    # mantém nomes dos países
-            title=None              # remove título do eixo Y
-        ),
-        showlegend=False
+        title_font_color=AZUL_ESCURO,
+        xaxis_title=None,
+        yaxis_title=None,
+        showlegend=False,
     )
 
     return fig
 
 
-def grafico_jackpot(sorteios: Iterable[Sorteio]) -> go.Figure:
-    sorteios = list(sorteios)
-
+# ------------------------------------------------------------
+# ACUMULAÇÕES AO LONGO DO TEMPO
+# ------------------------------------------------------------
+def grafico_acumulacoes(sorteios: Iterable[Sorteio]) -> go.Figure:
     df = pd.DataFrame(
-        {
-            "Data": [s.data for s in sorteios],
-            "JackpotMilhoes": [
-                getattr(s, "jackpot_int", s.jackpot) / 1_000_000 for s in sorteios],
-        }
-    ).sort_values("Data")
+        [
+            {
+                "Data": s.data,
+                "Jackpot": _jackpot_to_float(s.jackpot_fmt),
+                "Acumulou": s.acumulou,
+            }
+            for s in sorteios
+        ]
+    )
+
+    if df.empty:
+        return go.Figure()
 
     fig = px.line(
         df,
         x="Data",
-        y="JackpotMilhoes",
-        markers=True,
-        title="Evolução do prémio do jackpot",
-        color_discrete_sequence=[VERDE],
+        y="Jackpot",
+        title="Evolução do Jackpot",
+        markers=False,
     )
 
-    fig.update_traces(
-        marker=dict(color=VERDE),
-        line=dict(color=VERDE),
-    )
-    # limites dinâmicos do eixo Y com pequena folga 
-    min_y = df["JackpotMilhoes"].min() 
-    max_y = df["JackpotMilhoes"].max()
+    df_acum = df[df["Acumulou"]]
+    if not df_acum.empty:
+        fig.add_scatter(
+            x=df_acum["Data"],
+            y=df_acum["Jackpot"],
+            mode="markers",
+            marker=dict(size=10, color="red"),
+            name="Acumulou",
+        )
 
-    padding_inf = max(min_y * 0.9, 0) # não deixa ir abaixo de 0
-    padding_sup = max_y * 1.05
-
-    # ✔ MOSTRA APENAS LABELS (datas e valores)
     fig.update_layout(
-        xaxis=dict(
-            showticklabels=True,   # mantém datas
-            title=None             # remove título do eixo X
-        ),
-        yaxis=dict(
-            showticklabels=True,   # mantém valores
-            title=None,            # remove título do eixo Y
-            range=[padding_inf, padding_sup],
-            tickformat=",.1f",
-            ticksuffix="M"
-        ),
-        showlegend=False
+        title_font_color=AZUL_ESCURO,
+        xaxis_title=None,
+        yaxis_title="Jackpot (R$)",
+        showlegend=True,
     )
 
     return fig
+
+
+# ------------------------------------------------------------
+# DISTRIBUIÇÃO POR UF (NOVO PIPELINE)
+# ------------------------------------------------------------
+def grafico_uf(sorteios: Iterable[Sorteio]) -> go.Figure:
+    df = pd.DataFrame(
+        [
+            {"UF": s.uf}
+            for s in sorteios
+            if s.uf  # ignora sem UF
+        ]
+    )
+
+    if df.empty:
+        return go.Figure()
+
+    df = df.value_counts("UF").reset_index(name="Ocorrências")
+    df = df.sort_values("Ocorrências", ascending=False)
+
+    fig = px.bar(
+        df,
+        x="Ocorrências",
+        y="UF",
+        orientation="h",
+        text="Ocorrências",
+        color_discrete_sequence=[AZUL],
+    )
+
+    fig.update_layout(
+        xaxis=dict(visible=False),
+        yaxis=dict(title=None, showticklabels=True),
+        showlegend=False,
+        height=500,
+        margin=dict(l=20, r=20, t=20, b=20),
+    )
+
+    fig.update_yaxes(autorange="reversed")
+    fig.update_traces(textposition="outside")
+
+    return fig
+
+
+
+
+
+
 
 
 

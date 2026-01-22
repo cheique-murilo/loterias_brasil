@@ -1,32 +1,42 @@
 import os
 import pandas as pd
-import streamlit as st
 
-CAMINHO_ARQUIVO = "jogos_portugal.xlsx"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.join(ROOT, "base")
 
-@st.cache_data(show_spinner="Lendo Excel...")
-def carregar_dados_brutos() -> pd.DataFrame:
-    """Lê o Excel como texto, sem nenhuma lógica de negócio."""
-    if not os.path.exists(CAMINHO_ARQUIVO):
-        st.error(f"Arquivo {CAMINHO_ARQUIVO} não encontrado.")
-        return pd.DataFrame()
+MAPA_ARQUIVOS = {
+    "Mega-Sena": "Mega_Sena.xlsx",
+    "Quina": "Quina.xlsx",
+    "Dupla Sena": "Dupla_Sena.xlsx",
+    "Lotofácil": "Lotofácil.xlsx",
+}
 
-    try:
-        df = pd.read_excel(
-            CAMINHO_ARQUIVO,
-            dtype={
-                "jackpot": str,                 # <--- ESSENCIAL
-                "numeros_sorteados": str,
-                "num_vencedores_jackpot": str,
-                "numeros_complementares": str,
-                "pais_vencedor": str,
-                "acumulou": str,
-            }
-        )
+def carregar_dados_loteria(nome: str) -> pd.DataFrame:
+    """
+    Carrega o Excel como strings, remove colunas e linhas totalmente vazias
+    e normaliza nomes de colunas (strip).
+    """
+    if nome not in MAPA_ARQUIVOS:
+        raise ValueError(f"Loteria {nome} não encontrada.")
 
-        return df
+    caminho = os.path.join(BASE_DIR, MAPA_ARQUIVOS[nome])
+    if not os.path.exists(caminho):
+        raise FileNotFoundError(f"Arquivo {caminho} não encontrado.")
 
-    except Exception as e:
-        st.error(f"Erro ao ler Excel: {e}")
-        return pd.DataFrame()
+    df = pd.read_excel(caminho, dtype=str)
+
+    df = df.dropna(axis=1, how="all")
+    df = df.dropna(axis=0, how="all")
+    df.columns = [c.strip() for c in df.columns]
+
+    return df
+
+
+
+
+
+
+
+
+
 

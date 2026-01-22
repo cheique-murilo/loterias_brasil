@@ -1,32 +1,61 @@
-from typing import List, Dict
-from modelos.sorteio import Sorteio
 from collections import Counter
+from typing import Iterable, Dict, List, Tuple
+from modelos.sorteio import Sorteio
 
-# ============================================================
-# 1) Atraso: há quantos sorteios este número não sai?
-# ============================================================
 
-def atraso_numeros(sorteios: List[Sorteio]) -> Dict[int, int]:
+def frequencia_recente(sorteios: Iterable[Sorteio], janela: int) -> Dict[int, int]:
     """
-    Retorna {numero: atraso_em_sorteios}.
-    Atraso = quantos sorteios passaram desde a última vez que o número saiu.
+    Frequência dos números nos últimos 'janela' sorteios.
     """
-    atraso = {}
-    vistos = set()
+    sorteios = list(sorteios)
+    if not sorteios:
+        return {}
 
-    # percorre do mais recente para o mais antigo
-    for idx, s in enumerate(reversed(sorteios)):
+    recentes = sorteios[-janela:]
+    cont = Counter()
+    for s in recentes:
+        cont.update(s.principais)
+    return dict(cont)
+
+
+def numeros_quentes(sorteios: Iterable[Sorteio], janela: int) -> List[Tuple[int, int]]:
+    """
+    Top números mais frequentes nos últimos 'janela' sorteios.
+    Retorna lista de (numero, frequencia), ordenada desc.
+    """
+    freq = frequencia_recente(sorteios, janela)
+    return sorted(freq.items(), key=lambda x: (-x[1], x[0]))
+
+
+def atraso_numeros(sorteios: Iterable[Sorteio]) -> Dict[int, int]:
+    """
+    Calcula o atraso (quantos sorteios desde a última aparição) de cada número.
+    Considera todos os números que já apareceram em algum sorteio.
+    """
+    sorteios = list(sorteios)
+    if not sorteios:
+        return {}
+
+    # Índice do último sorteio em que cada número apareceu
+    ultimo_indice = {}
+    for idx, s in enumerate(sorteios):
         for n in s.principais:
-            if n not in vistos:
-                atraso[n] = idx  # idx = quantos sorteios atrás
-                vistos.add(n)
+            ultimo_indice[n] = idx
 
-    # números que nunca saíram (raro, mas possível)
-    todos = set(n for s in sorteios for n in s.principais)
-    for n in todos:
-        atraso.setdefault(n, len(sorteios))
+    max_idx = len(sorteios) - 1
+    atraso = {n: max_idx - idx for n, idx in ultimo_indice.items()}
 
     return atraso
+
+
+def numeros_atrasados(sorteios: Iterable[Sorteio], limite: int = 15) -> List[Tuple[int, int]]:
+    """
+    Retorna os números mais atrasados (maior atraso primeiro).
+    """
+    atraso = atraso_numeros(sorteios)
+    ordenado = sorted(atraso.items(), key=lambda x: (-x[1], x[0]))
+    return ordenado[:limite]
+
 
 
 # ============================================================
