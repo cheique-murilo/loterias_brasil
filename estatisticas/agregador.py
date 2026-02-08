@@ -1,6 +1,4 @@
-from typing import Dict, Any, Iterable
-import unicodedata
-
+from typing import Iterable, Dict, Any
 from modelos.sorteio import Sorteio
 
 from .frequencias import frequencia_principais
@@ -8,8 +6,8 @@ from .repeticoes import repeticoes
 from .sequencias import sequencias_consecutivas
 from .jackpots import (
     maior_jackpot,
-    streak_acumulacoes,
     total_acumulacoes,
+    streak_acumulacoes,
     total_jackpots_pagos,
 )
 from .atraso import (
@@ -20,52 +18,59 @@ from .atraso import (
 )
 
 
-def formatar_int(n: int) -> str:
-    return format(n, ",").replace(",", ".")
-
-
-def normalizar_nome(nome: str) -> str:
-    nome = nome.lower().strip()
-    nome = unicodedata.normalize("NFD", nome)
-    nome = "".join(c for c in nome if unicodedata.category(c) != "Mn")
-    return nome
-
-
 def calcular_tudo(sorteios: Iterable[Sorteio], nome_loteria: str) -> Dict[str, Any]:
     sorteios = list(sorteios)
-
     if not sorteios:
         return {}
 
-    sorteios.sort(key=lambda s: (s.data, s.concurso_base, s.sorteio_num))
+    # -------------------------
+    # Frequências gerais
+    # -------------------------
+    freq = frequencia_principais(sorteios)
 
-    fp = frequencia_principais(sorteios)
+    # -------------------------
+    # Combinações repetidas
+    # -------------------------
+    duplas = repeticoes(sorteios, tamanho=2)
+    trios = repeticoes(sorteios, tamanho=3)
+    quadras = repeticoes(sorteios, tamanho=4)
 
-    resultados: Dict[str, Any] = {
-        "total_sorteios": formatar_int(len(sorteios)),
-        "total_acumulacoes": formatar_int(total_acumulacoes(sorteios)),
-        "max_streak_acumulacoes": formatar_int(streak_acumulacoes(sorteios)),
-        "maior_jackpot": maior_jackpot(sorteios),
-        "frequencias": dict(fp),
-        "frequencias_principais": dict(fp),
-        "duplas_repetidas": repeticoes(sorteios, tamanho=2, limite=15),
-        "trios_repetidos": repeticoes(sorteios, tamanho=3, limite=15),
-        "quadras_repetidas": repeticoes(sorteios, tamanho=4, limite=15),
-        "sequencias_consecutivas": sequencias_consecutivas(sorteios),
-        "total_jackpots_pagos": formatar_int(total_jackpots_pagos(sorteios)),
-        "frequencia_recente_50": frequencia_recente(sorteios, 50),
-        "numeros_quentes_50": numeros_quentes(sorteios, 50),
-        "atraso_numeros": atraso_numeros(sorteios),
-        "numeros_atrasados": numeros_atrasados(sorteios),
+    # -------------------------
+    # Sequências consecutivas
+    # -------------------------
+    seq = sequencias_consecutivas(sorteios)
+
+    # -------------------------
+    # Números quentes e frios
+    # -------------------------
+    freq_50 = frequencia_recente(sorteios, janela=50)
+    quentes_50 = numeros_quentes(sorteios, janela=50)
+    atrasados = numeros_atrasados(sorteios)
+
+    # -------------------------
+    # Jackpots e acumulações
+    # -------------------------
+    maior_jp = maior_jackpot(sorteios)
+    total_acum = total_acumulacoes(sorteios)
+    streak = streak_acumulacoes(sorteios)
+    jackpots_pagos = total_jackpots_pagos(sorteios)
+
+    return {
+        "total_sorteios": len(sorteios),
+        "frequencias": freq,
+        "duplas_repetidas": duplas,
+        "trios_repetidos": trios,
+        "quadras_repetidas": quadras,
+        "sequencias_consecutivas": seq,
+        "numeros_quentes_50": quentes_50,
+        "numeros_atrasados": atrasados,
+        "maior_jackpot": maior_jp,
+        "total_acumulacoes": total_acum,
+        "max_streak_acumulacoes": streak,
+        "total_jackpots_pagos": jackpots_pagos,
     }
 
-    resultados["especiais"] = {
-        "tipo": None,
-        "dados": None,
-        "duplas": None,
-    }
 
-    return resultados
 
 
 

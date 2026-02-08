@@ -45,7 +45,8 @@ def grafico_frequencias(freq_dict: Dict[int, int]) -> go.Figure:
 
 
 # ------------------------------------------------------------
-# ACUMULAÇÕES AO LONGO DO TEMPO
+# ACUMULAÇÕES / JACKPOT AO LONGO DO TEMPO
+# (Dupla Sena: só sorteio 1 tem jackpot)
 # ------------------------------------------------------------
 def grafico_acumulacoes(sorteios: Iterable[Sorteio]) -> go.Figure:
     df = pd.DataFrame(
@@ -56,6 +57,7 @@ def grafico_acumulacoes(sorteios: Iterable[Sorteio]) -> go.Figure:
                 "Acumulou": s.acumulou,
             }
             for s in sorteios
+            if s.sorteio_num == 1  # Dupla Sena: só sorteio 1 tem jackpot
         ]
     )
 
@@ -91,29 +93,29 @@ def grafico_acumulacoes(sorteios: Iterable[Sorteio]) -> go.Figure:
 
 
 # ------------------------------------------------------------
-# DISTRIBUIÇÃO POR UF (NOVO PIPELINE)
+# DISTRIBUIÇÃO POR UF (corrigido para usar s.locais)
 # ------------------------------------------------------------
 def grafico_uf(sorteios: Iterable[Sorteio]) -> go.Figure:
-    df = pd.DataFrame(
-        [
-            {"UF": s.uf}
-            for s in sorteios
-            if s.uf  # ignora sem UF
-        ]
-    )
+    linhas = []
 
-    if df.empty:
+    for s in sorteios:
+        for loc in s.locais:
+            if loc["uf"]:
+                linhas.append({"UF": loc["uf"], "Ganhadores": loc["ganhadores"]})
+
+    if not linhas:
         return go.Figure()
 
-    df = df.value_counts("UF").reset_index(name="Ocorrências")
-    df = df.sort_values("Ocorrências", ascending=False)
+    df = pd.DataFrame(linhas)
+    df = df.groupby("UF")["Ganhadores"].sum().reset_index()
+    df = df.sort_values("Ganhadores", ascending=False)
 
     fig = px.bar(
         df,
-        x="Ocorrências",
+        x="Ganhadores",
         y="UF",
         orientation="h",
-        text="Ocorrências",
+        text="Ganhadores",
         color_discrete_sequence=[AZUL],
     )
 
@@ -129,6 +131,7 @@ def grafico_uf(sorteios: Iterable[Sorteio]) -> go.Figure:
     fig.update_traces(textposition="outside")
 
     return fig
+
 
 
 

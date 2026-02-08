@@ -1,73 +1,55 @@
-from __future__ import annotations
-from typing import List, Tuple
+from dataclasses import dataclass, field
+from typing import List
 import pandas as pd
-from .sorteio import Sorteio
+
+from modelos.sorteio import Sorteio
+
 
 class LoteriaBase:
-    def __init__(
-        self,
-        nome: str,
-        qtd_principais: int,
-        faixa_principais: Tuple[int, int],
-    ):
+    def __init__(self, nome: str, qtd_principais: int, faixa: tuple[int, int]):
         self.nome = nome
         self.qtd_principais = qtd_principais
-        self.faixa_principais = faixa_principais
-        self._sorteios: List[Sorteio] = []
+        self.faixa = faixa
+        self.sorteios: List[Sorteio] = []
 
-    def adicionar(self, sorteio: Sorteio) -> None:
-        self._sorteios.append(sorteio)
-        self._sorteios.sort(key=lambda s: (s.data, s.concurso_base, s.sorteio_num))
+    def adicionar(self, sorteio: Sorteio):
+        self.sorteios.append(sorteio)
 
-
-    def adicionar_multiplos(self, lista: List[Sorteio]) -> None:
-        for s in lista:
-            self.adicionar(s)
-
-    @property
-    def sorteios(self) -> List[Sorteio]:
-        return self._sorteios
-
-    @property
-    def total_sorteios(self) -> int:
-        return len(self._sorteios)
-
-    @property
-    def ultimos_5(self) -> List[Sorteio]:
-        return self._sorteios[-5:] if self._sorteios else []
-
-    def to_dataframe(self) -> pd.DataFrame:
-        def formatar_local(s: Sorteio) -> str:
-            # Caso especial: Canal Eletrônico
-            if s.uf == "CANAL ELETRÔNICO":
-                return "CANAL ELETRÔNICO"
-
-            # Cidade + UF
-            if s.cidade and s.uf:
-                return f"{s.cidade}/{s.uf}"
-
-            # Só cidade
-            if s.cidade:
-                return s.cidade
-
-            # Só UF
-            if s.uf:
-                return s.uf
-
+    # ------------------------------------------------------------
+    # Formatar locais (compatível com Dupla Sena)
+    # ------------------------------------------------------------
+    def formatar_local(self, s: Sorteio) -> str:
+        if not hasattr(s, "locais") or not s.locais:
             return ""
 
-        return pd.DataFrame([
-            {
-                "Data": s.data,
+        if len(s.locais) == 1 and s.locais[0]["uf"] == "CANAL ELETRÔNICO":
+            return "CANAL ELETRÔNICO"
+
+        return ", ".join(
+            f"{loc['cidade']}/{loc['uf']} ({loc['ganhadores']})"
+            for loc in s.locais
+        )
+
+    # ------------------------------------------------------------
+    # Converter sorteios para DataFrame (corrigido)
+    # ------------------------------------------------------------
+    def to_dataframe(self) -> pd.DataFrame:
+        linhas = []
+
+        for s in self.sorteios:
+            linhas.append({
+                "Data": s.data.strftime("%d/%m/%Y"),
                 "Concurso": s.concurso,
-                "Números": s.principais,
-                "Acumulou": s.acumulou,
+                "Sorteio": s.sorteio_num,  # <--- IMPORTANTE PARA DUPLA SENA
+                "Números": ", ".join(map(str, s.principais)),
+                "Acumulou": "Sim" if s.acumulou else "Não",
                 "Jackpot": s.jackpot_fmt,
-                "Ganhadores": s.ganhadores,
-                "Local": formatar_local(s),
-            }
-            for s in self.sorteios
-        ])
+                "Ganhadores": s.ganhadores_total,  # <--- CAMPO CORRETO
+                "Locais": self.formatar_local(s),
+            })
+
+        return pd.DataFrame(linhas)
+
 
 
 

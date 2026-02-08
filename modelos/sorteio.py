@@ -11,7 +11,7 @@ class Sorteio:
     acumulou: bool
     jackpot_fmt: str
     locais: List[Dict[str, str | int]]
-    ganhadores: int = 0
+    ganhadores_total: int = 0
 
     concurso_base: int = field(init=False)
     sorteio_num: int = field(init=False)

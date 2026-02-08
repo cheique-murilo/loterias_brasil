@@ -1,22 +1,13 @@
 from typing import Iterable, List, Dict, Any
-from modelos.sorteio import Sorteio
 from collections import defaultdict
+from modelos.sorteio import Sorteio
 
 
 def sequencias_consecutivas(sorteios: Iterable[Sorteio]) -> List[Dict[str, Any]]:
     """
-    1. Encontra sequências de números consecutivos dentro de cada sorteio.
-    2. Agrupa sequências iguais.
-    3. Conta quantas vezes cada sequência apareceu.
-    4. Lista os concursos onde cada sequência ocorreu.
-
-    Retorna:
-        {
-            "sequencia": [10, 11, 12],
-            "tamanho": 3,
-            "ocorrencias": 4,
-            "concursos": ["1234-1", "1450-2", "1780-1", "2001-2"]
-        }
+    Identifica sequências de números consecutivos dentro de cada sorteio.
+    Agrupa sequências iguais e conta ocorrências.
+    Compatível com Dupla Sena (sorteios 1 e 2 são independentes).
     """
     grupos = defaultdict(list)  # seq_tuple -> lista de concursos
 
@@ -46,16 +37,19 @@ def sequencias_consecutivas(sorteios: Iterable[Sorteio]) -> List[Dict[str, Any]]
             "sequencia": list(seq),
             "tamanho": len(seq),
             "ocorrencias": len(concursos),
-            "concursos": concursos,
+            "concursos": sorted(concursos),
         })
 
     # 3. Ordenar por:
-   
+    #   1) tamanho da sequência (desc)
+    #   2) número de ocorrências (desc)
+    #   3) sequência (asc)
     resultados.sort(
-        key=lambda x: (-x["tamanho"])
+        key=lambda x: (-x["tamanho"], -x["ocorrencias"], x["sequencia"])
     )
 
     return resultados
+
 
 
 

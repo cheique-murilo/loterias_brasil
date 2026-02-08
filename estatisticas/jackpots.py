@@ -1,6 +1,6 @@
-from modelos.sorteio import Sorteio
 import re
 from typing import Iterable, Tuple
+from modelos.sorteio import Sorteio
 
 
 def _jackpot_to_float(valor: str) -> float:
@@ -19,12 +19,18 @@ def _jackpot_to_float(valor: str) -> float:
 def maior_jackpot(sorteios: Iterable[Sorteio]) -> Tuple[str, str, object]:
     """
     Retorna (valor_fmt, concurso, data).
+    Ignora sorteios sem jackpot (ex: 2º sorteio da Dupla Sena).
     """
     sorteios = list(sorteios)
     if not sorteios:
         return ("R$ 0,00", None, None)
 
-    s = max(sorteios, key=lambda x: _jackpot_to_float(x.jackpot_fmt))
+    validos = [s for s in sorteios if _jackpot_to_float(s.jackpot_fmt) > 0]
+
+    if not validos:
+        return ("R$ 0,00", None, None)
+
+    s = max(validos, key=lambda x: _jackpot_to_float(x.jackpot_fmt))
     return (s.jackpot_fmt, s.concurso, s.data)
 
 
@@ -35,7 +41,7 @@ def total_acumulacoes(sorteios: Iterable[Sorteio]) -> int:
 def streak_acumulacoes(sorteios: Iterable[Sorteio]) -> int:
     """
     Maior sequência consecutiva de sorteios acumulados.
-    Ordena internamente por (data, concurso) para garantir consistência.
+    Ordena internamente por (data, concurso_base, sorteio_num) para Dupla Sena.
     """
     sorteios = sorted(sorteios, key=lambda s: (s.data, s.concurso_base, s.sorteio_num))
 
@@ -45,8 +51,7 @@ def streak_acumulacoes(sorteios: Iterable[Sorteio]) -> int:
     for s in sorteios:
         if s.acumulou:
             atual += 1
-            if atual > max_streak:
-                max_streak = atual
+            max_streak = max(max_streak, atual)
         else:
             atual = 0
 
@@ -58,6 +63,7 @@ def total_jackpots_pagos(sorteios: Iterable[Sorteio]) -> int:
     Total de sorteios em que houve ganhadores (não acumulou).
     """
     return sum(1 for s in sorteios if not s.acumulou)
+
 
 
 

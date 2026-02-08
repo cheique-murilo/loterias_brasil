@@ -141,7 +141,7 @@ for d in dados_norm:
         acumulou=(d["ganhadores_total"] == 0),
         jackpot_fmt=d["jackpot"],
         locais=d["locais"],
-        ganhadores=d["ganhadores_total"],
+        ganhadores_total=d["ganhadores_total"],
     )
     loteria.adicionar(s)
 
@@ -153,7 +153,7 @@ tipo_filtro = st.sidebar.radio("Filtrar por:", ["Data", "Concurso"], horizontal=
 
 min_date = min(s.data for s in loteria.sorteios)
 max_date = max(s.data for s in loteria.sorteios)
-todos_concursos = sorted({s.concurso for s in loteria.sorteios})
+todos_concursos = sorted({s.concurso_base for s in loteria.sorteios})
 
 if tipo_filtro == "Data":
     d_inicio = st.sidebar.date_input("Data inicial", value=min_date, min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
@@ -166,13 +166,16 @@ if tipo_filtro == "Data":
     sorteios_filtrados = [s for s in loteria.sorteios if d_inicio <= s.data <= d_fim]
 else:
     concurso_escolhido = st.sidebar.selectbox("Escolha o concurso", todos_concursos)
-    sorteios_filtrados = [s for s in loteria.sorteios if s.concurso == concurso_escolhido]
+    sorteios_filtrados = [s for s in loteria.sorteios if s.concurso_base == concurso_escolhido]
 
 if not sorteios_filtrados:
     st.warning("Nenhum sorteio encontrado com o filtro selecionado.")
     st.stop()
 
-sorteios_filtrados = sorted(sorteios_filtrados, key=lambda s: (s.data, s.concurso))
+sorteios_filtrados = sorted(
+    sorteios_filtrados,
+    key=lambda s: (s.data, s.concurso_base, s.sorteio_num)
+)
 
 # ------------------------------------------------------------
 # Download CSV
@@ -240,7 +243,7 @@ with aba_resumo:
             "Concurso": s.concurso,
             "Números": ", ".join(map(str, s.principais)),
             "Prêmio": s.jackpot_fmt,
-            "Ganhadores": s.ganhadores,
+            "Ganhadores": s.ganhadores_total,
             "Locais": ", ".join(
                 f"{loc['cidade']}/{loc['uf']} ({loc['ganhadores']})"
                 for loc in s.locais

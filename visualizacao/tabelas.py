@@ -1,6 +1,5 @@
 import pandas as pd
 from typing import List, Dict, Any
-
 from modelos.loteria_base import LoteriaBase
 
 
@@ -12,6 +11,11 @@ def dados_ultimos_sorteios(loteria: LoteriaBase) -> List[Dict[str, Any]]:
     dados = []
 
     for s in reversed(ultimos):
+        locais_fmt = ", ".join(
+            f"{loc['cidade']}/{loc['uf']} ({loc['ganhadores']})"
+            for loc in s.locais
+        ) if s.locais else ""
+
         dados.append(
             {
                 "Data": s.data.strftime("%d/%m/%Y"),
@@ -19,7 +23,7 @@ def dados_ultimos_sorteios(loteria: LoteriaBase) -> List[Dict[str, Any]]:
                 "Números": ", ".join(map(str, s.principais)),
                 "Prêmio": s.jackpot_fmt,
                 "Acumulou?": "Sim" if s.acumulou else "Não",
-                "Local": s.local_ganhadores,
+                "Local": locais_fmt,
             }
         )
     return dados
@@ -56,5 +60,6 @@ def tabela_frios(frios: List[tuple]) -> pd.DataFrame:
         .sort_values("Atraso", ascending=False)
         .reset_index(drop=True)
     )
+
 
 
