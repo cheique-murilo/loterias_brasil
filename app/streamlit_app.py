@@ -17,6 +17,7 @@ from modelos.sorteio import Sorteio
 from estatisticas.agregador import calcular_tudo
 from visualizacao import graficos
 
+# Tema Altair
 @alt.theme.register("tema_azul", enable=True)
 def tema_azul():
     return alt.theme.ThemeConfig(
@@ -25,6 +26,10 @@ def tema_azul():
             "axis": {"labelColor": "#063A9B", "titleColor": "#063A9B"},
         }
     )
+
+# ------------------------------------------------------------
+# Funções auxiliares de interface
+# ------------------------------------------------------------
 
 def mostrar_logo_loteria(nome_loteria: str):
     logos = {
@@ -78,6 +83,10 @@ def mostrar_data_arquivo_loteria(nome_loteria: str):
             unsafe_allow_html=True
         )
 
+# ------------------------------------------------------------
+# Configuração da página
+# ------------------------------------------------------------
+
 st.set_page_config(
     page_title="Loterias Brasil",
     layout="wide",
@@ -86,6 +95,10 @@ st.set_page_config(
 
 titulo_principal()
 st.markdown("---")
+
+# ------------------------------------------------------------
+# Sidebar
+# ------------------------------------------------------------
 
 st.sidebar.header("Filtros")
 
@@ -104,6 +117,10 @@ CONFIG_LOTERIA = {
     "Lotofácil": {"qtd_principais": 15, "faixa": (1, 25)},
 }
 
+# ------------------------------------------------------------
+# Carregamento e normalização
+# ------------------------------------------------------------
+
 df_raw = carregar_dados_loteria(nome_lot)
 dados_norm = normalizar_loteria(df_raw, nome_lot)
 st.sidebar.write("Qtde linhas normalizadas:", len(dados_norm))
@@ -115,18 +132,22 @@ if not dados_norm:
 config = CONFIG_LOTERIA[nome_lot]
 loteria = LoteriaBase(nome_lot, config["qtd_principais"], config["faixa"])
 
+# Criar objetos Sorteio
 for d in dados_norm:
     s = Sorteio(
         data=d["data"],
         concurso=d["concurso"],
         principais=d["principais"],
-        acumulou=(d["ganhadores"] == 0),
+        acumulou=(d["ganhadores_total"] == 0),
         jackpot_fmt=d["jackpot"],
-        cidade=d["cidade"],
-        uf=d["uf"],
-        ganhadores=d["ganhadores"],
+        locais=d["locais"],
+        ganhadores=d["ganhadores_total"],
     )
     loteria.adicionar(s)
+
+# ------------------------------------------------------------
+# Filtros
+# ------------------------------------------------------------
 
 tipo_filtro = st.sidebar.radio("Filtrar por:", ["Data", "Concurso"], horizontal=True)
 
@@ -135,8 +156,8 @@ max_date = max(s.data for s in loteria.sorteios)
 todos_concursos = sorted({s.concurso for s in loteria.sorteios})
 
 if tipo_filtro == "Data":
-    d_inicio = st.sidebar.date_input( "Data inicial", value=min_date, min_value=min_date, max_value=max_date, format="DD/MM/YYYY" )
-    d_fim = st.sidebar.date_input( "Data final", value=max_date, min_value=min_date, max_value=max_date, format="DD/MM/YYYY" )
+    d_inicio = st.sidebar.date_input("Data inicial", value=min_date, min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
+    d_fim = st.sidebar.date_input("Data final", value=max_date, min_value=min_date, max_value=max_date, format="DD/MM/YYYY")
 
     if d_inicio > d_fim:
         st.sidebar.error("Data inicial não pode ser maior que a final.")
@@ -153,6 +174,10 @@ if not sorteios_filtrados:
 
 sorteios_filtrados = sorted(sorteios_filtrados, key=lambda s: (s.data, s.concurso))
 
+# ------------------------------------------------------------
+# Download CSV
+# ------------------------------------------------------------
+
 df_base = loteria.to_dataframe()
 csv_bytes = df_base.to_csv(index=False).encode("utf-8")
 
@@ -164,15 +189,27 @@ st.sidebar.download_button(
     mime="text/csv",
 )
 
+# ------------------------------------------------------------
+# Estatísticas
+# ------------------------------------------------------------
+
 stats = calcular_tudo(sorteios_filtrados, nome_lot)
 
 if not stats:
     st.warning("Não foi possível calcular estatísticas para este filtro.")
     st.stop()
 
+# ------------------------------------------------------------
+# Abas
+# ------------------------------------------------------------
+
 aba_resumo, aba_repet, aba_seq, aba_quentes = st.tabs(
     ["Resumo 📈", "Combinações 🔍", "Sequências 📌", "Números🔥 e ❄️"]
 )
+
+# ------------------------------------------------------------
+# Aba Resumo
+# ------------------------------------------------------------
 
 with aba_resumo:
     st.subheader("Resumo geral")
@@ -204,12 +241,9 @@ with aba_resumo:
             "Números": ", ".join(map(str, s.principais)),
             "Prêmio": s.jackpot_fmt,
             "Ganhadores": s.ganhadores,
-            "Acumulou?": "Sim" if s.acumulou else "Não",
-            "Local": (
-                "CANAL ELETRÔNICO"
-                if s.uf == "CANAL ELETRÔNICO"
-                else f"{s.cidade}/{s.uf}" if s.cidade and s.uf
-                else s.cidade or s.uf or ""
+            "Locais": ", ".join(
+                f"{loc['cidade']}/{loc['uf']} ({loc['ganhadores']})"
+                for loc in s.locais
             ),
         }
         for s in ultimos
@@ -252,6 +286,10 @@ with aba_resumo:
     else:
         st.info("Sem dados de UF suficientes para exibir o gráfico.")
 
+# ------------------------------------------------------------
+# Aba Combinações
+# ------------------------------------------------------------
+
 with aba_repet:
     st.subheader("Combinações Repetidas")
     duplas = stats.get("duplas_repetidas", [])
@@ -269,6 +307,10 @@ with aba_repet:
         st.markdown("**Quadras mais repetidas**")
         st.dataframe(pd.DataFrame(quadras, columns=["Combinação", "Vezes"]), hide_index=True)
 
+# ------------------------------------------------------------
+# Aba Sequências
+# ------------------------------------------------------------
+
 with aba_seq:
     st.subheader("Sequências consecutivas dentro do sorteio")
 
@@ -285,6 +327,10 @@ with aba_seq:
     ])
 
     st.dataframe(df_seq, hide_index=True)
+
+# ------------------------------------------------------------
+# Aba Números Quentes e Frios
+# ------------------------------------------------------------
 
 with aba_quentes:
     st.header("Números🔥 e ❄️")
@@ -307,6 +353,7 @@ with aba_quentes:
     if frios:
         num_frio, atraso_frio = frios[0]
         col2.metric("❄️ Número mais frio", str(num_frio), f"{atraso_frio} sorteios sem aparecer")
+
 
 
 

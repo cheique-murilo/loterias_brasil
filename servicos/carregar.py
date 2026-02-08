@@ -12,10 +12,6 @@ MAPA_ARQUIVOS = {
 }
 
 def carregar_dados_loteria(nome: str) -> pd.DataFrame:
-    """
-    Carrega o Excel como strings, remove colunas e linhas totalmente vazias
-    e normaliza nomes de colunas (strip).
-    """
     if nome not in MAPA_ARQUIVOS:
         raise ValueError(f"Loteria {nome} não encontrada.")
 
@@ -30,6 +26,7 @@ def carregar_dados_loteria(nome: str) -> pd.DataFrame:
     df.columns = [c.strip() for c in df.columns]
 
     return df
+
 
 
 

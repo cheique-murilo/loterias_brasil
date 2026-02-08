@@ -38,10 +38,6 @@ MAPA_CONFIG = {
     },
 }
 
-# ------------------------------------------------------------
-# Funções auxiliares
-# ------------------------------------------------------------
-
 def _parse_data_br(valor) -> date | None:
     if not valor or not isinstance(valor, str):
         return None
@@ -56,90 +52,53 @@ def _parse_data_br(valor) -> date | None:
 
     return None
 
-
-def _safe_int(x) -> int | None:
-    try:
-        return int(str(x).strip())
-    except:
-        return None
-
-
 def _safe_int_zero(x) -> int:
     try:
         return int(str(x).strip())
     except:
         return 0
 
+def _safe_int(x):
+    try:
+        return int(str(x).strip())
+    except:
+        return None
 
 def _safe_str(x) -> str:
     if pd.isna(x):
         return ""
     return str(x).strip()
 
-
-def extrair_cidade_uf(valor: str) -> tuple[str, str]:
+# NOVA FUNÇÃO — trata valores separados por ;
+def extrair_lista_cidades_ufs(valor: str):
     if not valor:
-        return "", ""
+        return []
 
-    v = valor.strip().upper()
+    partes = [v.strip() for v in valor.split(";") if v.strip()]
+    resultado = []
 
-    if "CANAL" in v:
-        return "", "CANAL ELETRÔNICO"
+    for p in partes:
+        p_up = p.upper()
 
-    if "/" in valor:
-        cidade, uf = valor.rsplit("/", 1)
-        return cidade.strip(), uf.strip().upper()
+        if "CANAL" in p_up:
+            resultado.append(("", "CANAL ELETRÔNICO"))
+            continue
 
-    return valor.strip(), ""
+        if "/" in p:
+            cidade, uf = p.rsplit("/", 1)
+            resultado.append((cidade.strip(), uf.strip().upper()))
+        else:
+            resultado.append((p.strip(), ""))
 
+    return resultado
 
-# ------------------------------------------------------------
-# BUSCA ROBUSTA PARA DUPLA SENA
-# ------------------------------------------------------------
-
-def buscar_coluna_bola(row: pd.Series, i: int, n: int) -> int | None:
-    """
-    Busca robusta: encontra qualquer coluna que contenha:
-    - número da bola (i)
-    - número do sorteio (n)
-    - palavras-chave como 'bola', 'dezena', 'sorteio'
-    """
-    i_str = str(i)
-    n_str = str(n)
-
-    for col in row.index:
-        nome = (
-            col.lower()
-            .replace("º", "")
-            .replace("-", " ")
-            .replace("_", " ")
-            .replace("  ", " ")
-        )
-
-        if (
-            ("bola" in nome or "dezena" in nome)
-            and i_str in nome
-            and ("sorteio" in nome or "s " in nome or nome.endswith("s" + n_str))
-            and n_str in nome
-        ):
-            try:
-                return int(str(row[col]).strip())
-            except:
-                return None
-
-    return None
-
-
-# ------------------------------------------------------------
-# NORMALIZADOR PRINCIPAL
-# ------------------------------------------------------------
 
 def normalizar_loteria(df: pd.DataFrame, nome: str) -> list[dict]:
     if nome not in MAPA_CONFIG:
         raise ValueError(f"Config para {nome} não encontrada.")
 
     config = MAPA_CONFIG[nome]
-    resultados: List[dict] = []
+    resultados = []
 
     col_data = next((c for c in COLUNAS_DATA if c in df.columns), None)
     if not col_data:
@@ -149,63 +108,50 @@ def normalizar_loteria(df: pd.DataFrame, nome: str) -> list[dict]:
     df = df.dropna(subset=["data_parsed"])
 
     for _, row in df.iterrows():
-        cidade, uf = extrair_cidade_uf(_safe_str(row.get("Cidade / UF", "")))
+        data = row["data_parsed"]
+        concurso = _safe_str(row.get("Concurso", ""))
 
-        base = {
-            "data": row["data_parsed"],
-            "concurso": _safe_str(row.get("Concurso", "")),
-            "cidade": cidade,
-            "uf": uf,
-        }
+        # LISTA DE CIDADES/UFs
+        lista_cidades_ufs = extrair_lista_cidades_ufs(_safe_str(row.get("Cidade / UF", "")))
 
-        # ------------------------------------------------------------
-        # DUPLA SENA — 2 SORTEIOS POR LINHA
-        # ------------------------------------------------------------
-        if config["dupla"]:
-            for n in (1, 2):
-                bolas = [
-                    buscar_coluna_bola(row, i, n)
-                    for i in range(1, config["qtd_bolas"] + 1)
-                ]
-                bolas = [b for b in bolas if b is not None]
+        # LISTA DE GANHADORES
+        lista_ganhadores = [
+            _safe_int_zero(x)
+            for x in _safe_str(row.get(config.get("col_ganhadores", ""), "")).split(";")
+        ]
 
-                # Jackpot e ganhadores — busca flexível
-                jackpot = ""
-                ganhadores = 0
+        # Ajusta tamanhos
+        while len(lista_ganhadores) < len(lista_cidades_ufs):
+            lista_ganhadores.append(1)
 
-                for col in row.index:
-                    nome = col.lower().replace("º", "").replace("-", " ")
-                    if "rateio" in nome and "6" in nome and str(n) in nome:
-                        jackpot = _safe_str(row[col])
-                    if "ganhadores" in nome and "6" in nome and str(n) in nome:
-                        ganhadores = _safe_int_zero(row[col])
-
-                resultados.append({
-                    **base,
-                    "concurso": f"{base['concurso']}-{n}",
-                    "principais": bolas,
-                    "jackpot": jackpot,
-                    "ganhadores": ganhadores,
-                })
-
-        # ------------------------------------------------------------
-        # LOTERIAS NORMAIS
-        # ------------------------------------------------------------
-        else:
-            bolas = [
-                _safe_int(row.get(config["padrao_bola"].format(i)))
-                for i in range(1, config["qtd_bolas"] + 1)
-            ]
-            bolas = [b for b in bolas if b is not None]
-
-            resultados.append({
-                **base,
-                "principais": bolas,
-                "jackpot": _safe_str(row.get(config["col_jackpot"], "")),
-                "ganhadores": _safe_int_zero(row.get(config["col_ganhadores"], "")),
+        locais = []
+        for (cidade, uf), g in zip(lista_cidades_ufs, lista_ganhadores):
+            locais.append({
+                "cidade": cidade,
+                "uf": uf,
+                "ganhadores": g
             })
 
+        # BOLAS
+        bolas = [
+            _safe_int(row.get(config["padrao_bola"].format(i)))
+            for i in range(1, config["qtd_bolas"] + 1)
+        ]
+        bolas = [b for b in bolas if b is not None]
+
+        jackpot = _safe_str(row.get(config.get("col_jackpot", ""), ""))
+
+        resultados.append({
+            "data": data,
+            "concurso": concurso,
+            "principais": bolas,
+            "jackpot": jackpot,
+            "locais": locais,
+            "ganhadores_total": sum(lista_ganhadores),
+        })
+
     return resultados
+
 
 
 
